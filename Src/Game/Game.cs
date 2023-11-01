@@ -2,6 +2,8 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using RiseOfHumanity.Graphics;
 
 namespace RiseOfHumanity.Game;
 
@@ -25,6 +27,8 @@ public class Game : GameWindow
     private Matrix4 _view;
     private Matrix4 _model;
     private float _rotation;
+
+    private Camera _camera = new Camera();
 
     public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(
         gameWindowSettings, nativeWindowSettings)
@@ -102,8 +106,27 @@ public class Game : GameWindow
     {
         base.OnUpdateFrame(e);
 
-        _rotation += (float)e.Time * 0.5f;
-        _model = Matrix4.CreateRotationY(_rotation);
+        if (KeyboardState.IsKeyDown(Keys.W))
+        {
+            _camera.MoveForward(_camera.Speed * (float)e.Time);
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.S))
+        {
+            _camera.MoveBackward(_camera.Speed * (float)e.Time);
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.A))
+        {
+            _camera.MoveLeft(_camera.Speed * (float)e.Time);
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.D))
+        {
+            _camera.MoveRight(_camera.Speed * (float)e.Time);
+        }
+
+        _view = _camera.GetViewMatrix();
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
