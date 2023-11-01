@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
@@ -6,9 +7,24 @@ namespace RiseOfHumanity.Game;
 
 public class Game : GameWindow
 {
+    private uint[] _indices =
+    {
+        0, 1, 2, 2, 3, 0, // Przednia ściana
+        4, 5, 6, 6, 7, 4, // Tylna ściana
+        4, 5, 1, 1, 0, 4, // Dolna ściana
+        7, 6, 2, 2, 3, 7, // Górna ściana
+        7, 4, 0, 0, 3, 7, // Lewa ściana
+        6, 5, 1, 1, 2, 6 // Prawa ściana
+    };
+
     private int _program;
     private int _vertexArray;
     private int _elementBuffer;
+
+    private Matrix4 _project;
+    private Matrix4 _view;
+    private Matrix4 _model;
+    private float _rotation;
 
     public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(
         gameWindowSettings, nativeWindowSettings)
@@ -42,16 +58,15 @@ public class Game : GameWindow
 
         float[] vertices =
         {
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-            0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f
-        };
-
-        uint[] indices =
-        {
-            0, 1, 2,
-            2, 3, 0,
+            // Pozycje        // Kolory
+            -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, // 0
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // 1
+            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // 2
+            -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, // 3
+            -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, // 4
+            0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, // 5
+            0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f, // 6
+            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f // 7
         };
 
         _vertexArray = GL.GenVertexArray();
@@ -63,7 +78,8 @@ public class Game : GameWindow
 
         _elementBuffer = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBuffer);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices,
+            BufferUsageHint.StaticDraw);
 
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
         GL.EnableVertexAttribArray(0);
@@ -73,18 +89,41 @@ public class Game : GameWindow
 
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
+
+        GL.Enable(EnableCap.DepthTest);
+
+        _project = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y,
+            0.1f, 100.0f);
+        _view = Matrix4.LookAt(new Vector3(0.0f, 0.0f, -3.0f), Vector3.Zero, Vector3.UnitY);
+        _model = Matrix4.Identity;
+    }
+
+    protected override void OnUpdateFrame(FrameEventArgs e)
+    {
+        base.OnUpdateFrame(e);
+
+        _rotation += (float)e.Time * 0.5f;
+        _model = Matrix4.CreateRotationY(_rotation);
     }
 
     protected override void OnRenderFrame(FrameEventArgs e)
     {
         base.OnRenderFrame(e);
 
-        GL.Clear(ClearBufferMask.ColorBufferBit);
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         GL.UseProgram(_program);
         GL.BindVertexArray(_vertexArray);
 
-        GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
+        var model = GL.GetUniformLocation(_program, "model");
+        var view = GL.GetUniformLocation(_program, "view");
+        var project = GL.GetUniformLocation(_program, "project");
+
+        GL.UniformMatrix4(model, false, ref _model);
+        GL.UniformMatrix4(view, false, ref _view);
+        GL.UniformMatrix4(project, false, ref _project);
+
+        GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
 
         SwapBuffers();
     }
