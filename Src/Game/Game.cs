@@ -9,18 +9,14 @@ namespace RiseOfHumanity.Game;
 
 public class Game : GameWindow
 {
-    private uint[] _indices =
-    {
-        0, 1, 2, 2, 3, 0, // Przednia ściana
-        4, 5, 6, 6, 7, 4, // Tylna ściana
-        4, 5, 1, 1, 0, 4, // Dolna ściana
-        7, 6, 2, 2, 3, 7, // Górna ściana
-        7, 4, 0, 0, 3, 7, // Lewa ściana
-        6, 5, 1, 1, 2, 6 // Prawa ściana
-    };
+    private Vector3[] _vertices;
+    private int[] _indices;
+    private Color4[] _colors;
 
     private int _program;
     private int _vertexArray;
+    private int _vertexBuffer;
+    private int _vertexColors;
     private int _elementBuffer;
 
     private Matrix4 _project;
@@ -60,36 +56,31 @@ public class Game : GameWindow
         GL.DeleteShader(vs);
         GL.DeleteShader(fs);
 
-        float[] vertices =
-        {
-            // Pozycje        // Kolory
-            -0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, // 0
-            0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // 1
-            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // 2
-            -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, // 3
-            -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, // 4
-            0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, // 5
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f, // 6
-            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f // 7
-        };
+        var generator = new MapGenerator(100, 100, 10);
+        var map = generator.Generate();
+        map.GetVertexAndIndexData(out _vertices, out _indices, out _colors);
 
         _vertexArray = GL.GenVertexArray();
         GL.BindVertexArray(_vertexArray);
 
-        var vertexBuffer = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
-        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+        _vertexBuffer = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
+        GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * Vector3.SizeInBytes, _vertices,
+            BufferUsageHint.StaticDraw);
+        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
+        GL.EnableVertexAttribArray(0);
+
+        _vertexColors = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexColors);
+        GL.BufferData(BufferTarget.ArrayBuffer, _colors.Length * Vector3.SizeInBytes, _colors,
+            BufferUsageHint.StaticDraw);
+        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 0, 0);
+        GL.EnableVertexAttribArray(1);
 
         _elementBuffer = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBuffer);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices,
+        GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(int), _indices,
             BufferUsageHint.StaticDraw);
-
-        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-        GL.EnableVertexAttribArray(0);
-
-        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
-        GL.EnableVertexAttribArray(1);
 
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
@@ -147,6 +138,8 @@ public class Game : GameWindow
         GL.UniformMatrix4(project, false, ref _project);
 
         GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
+
+        GL.BindVertexArray(0);
 
         SwapBuffers();
     }
