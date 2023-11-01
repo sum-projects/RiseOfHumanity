@@ -8,6 +8,7 @@ public class Game : GameWindow
 {
     private int _program;
     private int _vertexArray;
+    private int _elementBuffer;
 
     public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(
         gameWindowSettings, nativeWindowSettings)
@@ -43,16 +44,26 @@ public class Game : GameWindow
         {
             -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
             0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+            0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+            -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f
+        };
+
+        uint[] indices =
+        {
+            0, 1, 2,
+            2, 3, 0,
         };
 
         _vertexArray = GL.GenVertexArray();
-        var vertexBuffer = GL.GenBuffer();
-
         GL.BindVertexArray(_vertexArray);
 
+        var vertexBuffer = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
         GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+
+        _elementBuffer = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBuffer);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
         GL.EnableVertexAttribArray(0);
@@ -73,7 +84,7 @@ public class Game : GameWindow
         GL.UseProgram(_program);
         GL.BindVertexArray(_vertexArray);
 
-        GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+        GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
 
         SwapBuffers();
     }
