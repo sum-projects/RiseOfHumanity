@@ -22,9 +22,12 @@ public class Game : GameWindow
     private Matrix4 _project;
     private Matrix4 _view;
     private Matrix4 _model;
-    private float _rotation;
 
-    private Camera _camera = new Camera();
+    private readonly Camera _camera = new();
+
+    private const int Width = 20;
+    private const int Height = 14;
+    private const int Depth = 2;
 
     public Game(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(
         gameWindowSettings, nativeWindowSettings)
@@ -56,7 +59,7 @@ public class Game : GameWindow
         GL.DeleteShader(vs);
         GL.DeleteShader(fs);
 
-        var generator = new MapGenerator(100, 100, 10);
+        var generator = new MapGenerator(Width, Height, Depth);
         var map = generator.Generate();
         map.GetVertexAndIndexData(out _vertices, out _indices, out _colors);
 
@@ -87,15 +90,27 @@ public class Game : GameWindow
 
         GL.Enable(EnableCap.DepthTest);
 
-        _project = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Size.X / (float)Size.Y,
+        _project = Matrix4.CreatePerspectiveFieldOfView(1.0f, ClientSize.X / (float)ClientSize.Y,
             0.1f, 100.0f);
-        _view = Matrix4.LookAt(new Vector3(0.0f, 0.0f, -3.0f), Vector3.Zero, Vector3.UnitY);
+        _view = _camera.GetViewMatrix();
         _model = Matrix4.Identity;
+
+        var centerX = Width / 2.0f;
+        var centerY = Height / 2.0f;
+        var centerZ = Depth / 2.0f;
+
+        _camera.Position = new Vector3(centerX, centerY, centerZ - 15.0f);
+        _camera.Target = new Vector3(centerX, centerY, centerZ);
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
         base.OnUpdateFrame(e);
+
+        if (KeyboardState.IsKeyDown(Keys.Escape))
+        {
+            Close();
+        }
 
         if (KeyboardState.IsKeyDown(Keys.W))
         {

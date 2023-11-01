@@ -26,7 +26,7 @@ public class MapGenerator
             {
                 for (var z = 0; z < _depth; z++)
                 {
-                    if (y < _height / 2)
+                    if (z < _depth / 2)
                     {
                         voxels[x, y, z] = new Voxel(new Vector3(x, y, z), new Color4(1.0f, 0.5f, 0.3f, 1.0f));
                     }

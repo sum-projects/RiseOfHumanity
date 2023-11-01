@@ -1,10 +1,11 @@
-﻿using OpenTK.Windowing.Desktop;
+﻿using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 using RiseOfHumanity.Game;
 
 
 var settings = new NativeWindowSettings()
 {
-    Size = (800, 600),
+    WindowState = WindowState.Fullscreen,
     Title = "Rise Of Humanity",
 };
 using var game = new Game(GameWindowSettings.Default, settings);

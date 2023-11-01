@@ -17,29 +17,29 @@ public class Camera
 
     public void MoveForward(float amount)
     {
-        var move = Vector3.Normalize(Target - Position) * amount;
+        var move = Vector3.UnitY * amount;
         Position += move;
         Target += move;
     }
 
     public void MoveBackward(float amount)
     {
-        var move = Vector3.Normalize(Target - Position) * amount;
+        var move = Vector3.UnitY * amount;
         Position -= move;
         Target -= move;
     }
 
     public void MoveRight(float amount)
     {
-        var move =  Vector3.Normalize(Vector3.Cross(Target - Position, Up)) * amount;
-        Position += move;
-        Target += move;
+        var move = Vector3.UnitX * amount;
+        Position -= move;
+        Target -= move;
     }
 
     public void MoveLeft(float amount)
     {
-        var move =  Vector3.Normalize(Vector3.Cross(Target - Position, Up)) * amount;
-        Position -= move;
-        Target -= move;
+        var move = Vector3.UnitX * amount;
+        Position += move;
+        Target += move;
     }
 }
