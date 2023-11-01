@@ -132,6 +132,17 @@ public class Game : GameWindow
             _camera.MoveRight(_camera.Speed * (float)e.Time);
         }
 
+        if (KeyboardState.IsKeyDown(Keys.Q))
+        {
+            _model *= _camera.RotateCamera((float)e.Time * -45);
+
+        }
+
+        if (KeyboardState.IsKeyDown(Keys.E))
+        {
+            _model *= _camera.RotateCamera((float)e.Time * 45);
+        }
+
         _view = _camera.GetViewMatrix();
     }
 
@@ -157,5 +168,15 @@ public class Game : GameWindow
         GL.BindVertexArray(0);
 
         SwapBuffers();
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+
+        var zoomAmount = e.OffsetY * 0.5f;
+        var dir = Vector3.Normalize(_camera.Target - _camera.Position);
+
+        _camera.Position += dir * zoomAmount;
     }
 }

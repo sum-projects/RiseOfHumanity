@@ -42,4 +42,13 @@ public class Camera
         Position += move;
         Target += move;
     }
+
+    public Matrix4 RotateCamera(float angle)
+    {
+        var translationToOrigin = Matrix4.CreateTranslation(-Target);
+        var rotation = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(angle));
+        var translationBack = Matrix4.CreateTranslation(Target);
+
+        return translationToOrigin * rotation * translationBack;
+    }
 }
