@@ -1,18 +1,38 @@
+using System.Data.SqlTypes;
 using OpenTK.Mathematics;
 
 namespace RiseOfHumanity.Graphics;
 
 public class Camera
 {
-    public Vector3 Position { get; set; } = new(0.0f, 0.0f, -3.0f);
-    public Vector3 Target { get; set; } = Vector3.Zero;
-    public Vector3 Up { get; set; } = Vector3.UnitY;
+    public Matrix4 Project;
+    public Matrix4 View;
+    public Matrix4 Model;
+
+    public Vector3 Position { get; set; }
+    public Vector3 Target { get; set; }
+    public Vector3 Up { get; set; }
 
     public float Speed { get; set; } = 2.0f;
 
-    public Matrix4 GetViewMatrix()
+    public Camera(int winWidth, int winHeight, int mapWidth, int mapHeight, int mapDepth)
     {
-        return Matrix4.LookAt(Position, Target, Up);
+        var centerX = mapWidth / 2.0f;
+        var centerY = mapHeight / 2.0f;
+        var centerZ = mapDepth / 2.0f;
+
+        Position = new Vector3(centerX, centerY, centerZ - 15.0f);
+        Target = new Vector3(centerX, centerY, centerZ);
+        Up = Vector3.UnitY;
+
+        Project = Matrix4.CreatePerspectiveFieldOfView(1.0f, winWidth / (float)winHeight, 0.1f, 100.0f);
+        View = Matrix4.LookAt(Position, Target, Up);
+        Model = Matrix4.Identity;
+    }
+
+    public void UpdateViewMatrix()
+    {
+        View = Matrix4.LookAt(Position, Target, Up);
     }
 
     public void MoveForward(float amount)
@@ -43,12 +63,12 @@ public class Camera
         Target += move;
     }
 
-    public Matrix4 RotateCamera(float angle)
+    public void RotateCamera(float angle)
     {
         var translationToOrigin = Matrix4.CreateTranslation(-Target);
         var rotation = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(angle));
         var translationBack = Matrix4.CreateTranslation(Target);
 
-        return translationToOrigin * rotation * translationBack;
+         Model *= translationToOrigin * rotation * translationBack;
     }
 }
